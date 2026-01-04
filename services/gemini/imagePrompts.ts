@@ -23,10 +23,12 @@ const isDigitalFormat = (format: CreativeFormat): boolean => {
 
 const getDynamicVibe = (format: CreativeFormat): string => {
     if (isDigitalFormat(format)) {
+        // --- UBAH BAGIAN INI UNTUK HASIL CLEAN SCREENSHOT ---
         return `
-        - **VIBE:** Candid, Imperfect, handheld, viral screenshot energy.
-        - **DETAILS:** Screen glare, fingerprints, organic background blur (bokeh), slightly tilted angle.
-        - **REALISM:** It must look like a PHOTO of a screen, not a digital export.
+        - **VIBE:** High-Fidelity Digital UI Design (Clean Flat Graphic).
+        - **DETAILS:** Perfect pixel alignment, sharp vector-like text, solid hex colors.
+        - **REALISM:** It must look like a DIRECT SCREENSHOT or Digital Export (PNG). NO screen glare, NO tilt, NO camera blur, NO fingerprints.
+        - **PERSPECTIVE:** Perfectly flat 90-degree front-facing view.
         `;
     } else {
         return `
