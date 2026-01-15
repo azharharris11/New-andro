@@ -9,30 +9,61 @@ export const getFormatTextGuide = (format: CreativeFormat): string => {
     const baseGuide = "TEXT RENDERING INSTRUCTION:";
     
     switch (format) {
-    // --- 1. STORYTELLING GROUP (IG Story, Long Text) ---
-        case CreativeFormat.IG_STORY_TEXT:
         case CreativeFormat.LONG_TEXT:
-            return `${baseGuide}
-            
-            
-            **YOUR ROLE:** You are a world-class Visual Storyteller.
-            
-            **1. VISUAL DIRECTION (TOTAL FREEDOM):**
-            - Do NOT follow a fixed template.
-            - Analyze the *emotion* and *context* of the text you are writing.
-            - **Generate a background and visual style that perfectly amplifies that specific emotion.**
-            - It could be dark, bright, blurred, sharp, minimalist, or chaotic—YOU DECIDE based on what fits best.
-            
-            **2. TYPOGRAPHY:**
-            - Use a modern, native font (like San Francisco).
-            **SMART HIGHLIGHT:** You MUST apply a background color highlight (Yellow/Blue/Green) to the *most important phrase* to make it pop.
-            - **Emphasis:** Intelligent use of Background Highlights (like Instagram's 'A' tool) on key phrases is highly recommended to break monotony.
+             return `${baseGuide}
+             VISUAL: 100% Full-Screen Digital Overlay. No mockup. No hand.
+             STYLE: Instagram Story "Open Letter" / Wall of Text.
+             LAYOUT: Perfectly centered white text on a solid dark charcoal background or a heavily blurred dark photo.
+             STRUCTURE:
+             1. THE HOOK (Large Bold Serif).
+             2. THE AGITATION (Medium Sans-Serif).
+             3. THE PIVOT (Italic).
+             4. THE SOLUTION.
+             5. THE CTA.`;
 
-            **3. NARRATIVE FLOW:**
-            - Write a seamless "Stream of Consciousness" story (Vertical Flow).
-            - Start with a strong Hook/Trigger -> Pivot to Insight -> End with Vision/CTA.
-            - Keep it authentic. No corporate slang.
+        case CreativeFormat.IG_STORY_TEXT:
+            return `${baseGuide}
+            STYLE: The "Complete Journey" Narrative (IG Story).
+            
+            VISUALS:
+            - BACKGROUND: Aesthetic photo related to niche, HEAVILY DIMMED (60% Black Overlay) so white text pops.
+            - FONT: Modern Sans-Serif (San Francisco style), White Text.
+            - LAYOUT: Clean, airy, with spacing between paragraphs.
+            
+            **DYNAMIC WRITING INSTRUCTION:**
+            Write ONE seamless story that takes the reader on an emotional journey. 
+            Do NOT use headers like "Step 1". Just write the narrative naturally like a diary entry.
+
+            **THE "ULTIMATE FLOW" STRUCTURE:**
+            
+            1. PHASE 1: THE TRIGGER (Sensory Start)
+               - Start with a specific split-second of frustration.
+               - Example: "Jam 2 pagi masih scroll..." or "Pas ngaca liat jerawat..."
+               - Goal: Make them feel "Damn, that's me."
+
+            2. PHASE 2: THE REALIZATION (The Pivot)
+               - Zoom out and explain WHY. "Aku baru sadar, ternyata selama ini kita salah karena..."
+               - Validate their struggle (It's not their fault, it's the old method).
+
+            3. PHASE 3: THE VISION (The Dream)
+               - "Padahal, bayangin kalau besok kamu bangun dan..."
+               - Paint a picture of the result they want.
+               - End with a subtle nudging towards [Product/Method] as the bridge.
+
+            **IDENTITY RULE (THE "RELATABLE MENTOR" SHIFT):**
+            You must shift your tone as the story progresses to build trust:
+            - **AT THE START (Phase 1):** You are a **FRIEND**. Use vulnerable language ("Aku juga pernah...", "Rasanya capek ya...").
+            - **IN THE MIDDLE (Phase 2):** You are an **ANALYST**. Use objective logic ("Masalahnya bukan di kamu, tapi di sistemnya...").
+            - **AT THE END (Phase 3):** You are a **GUIDE**. Use confident authority ("Ada cara yang lebih baik...").
+            
+            *CRITICAL:* Never sound like a corporate brand. Sound like the Founder/Creator talking personally to their best friend.
+
+            **RULES:**
+            - LENGTH: Keep it "Snackable" (Max 120-130 words).
+            - TONE: Vulnerable start -> Wise middle -> Hopeful end.
+            - LANGUAGE: Natural "Curhat" style (e.g. Aku/Kamu). No marketing jargon.
             `;
+
         case CreativeFormat.STORY_POLL:
             return `${baseGuide} STYLE: Instagram Story Poll Sticker. Digital UI element floating on a blurred background.`;
         case CreativeFormat.STORY_QNA:
