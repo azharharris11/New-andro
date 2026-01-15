@@ -16,19 +16,19 @@ const isDigitalFormat = (format: CreativeFormat): boolean => {
         CreativeFormat.TWITTER_REPOST, CreativeFormat.GMAIL_UX, CreativeFormat.DM_NOTIFICATION,
         CreativeFormat.REMINDER_NOTIF, CreativeFormat.CHAT_CONVERSATION, CreativeFormat.REDDIT_THREAD,
         CreativeFormat.PHONE_NOTES, CreativeFormat.SEARCH_BAR, CreativeFormat.SOCIAL_COMMENT_STACK,
-        CreativeFormat.BIG_FONT, CreativeFormat.MEME, CreativeFormat.US_VS_THEM
+        CreativeFormat.LONG_TEXT, CreativeFormat.BIG_FONT, CreativeFormat.MEME, CreativeFormat.US_VS_THEM,
     ];
     return digitalFormats.includes(format);
 };
 
 const getDynamicVibe = (format: CreativeFormat): string => {
     if (isDigitalFormat(format)) {
-        // --- UBAH BAGIAN INI UNTUK HASIL CLEAN SCREENSHOT ---
         return `
-        - **VIBE:** High-Fidelity Digital UI Design (Clean Flat Graphic).
-        - **DETAILS:** Perfect pixel alignment, sharp vector-like text, solid hex colors.
-        - **REALISM:** It must look like a DIRECT SCREENSHOT or Digital Export (PNG). NO screen glare, NO tilt, NO camera blur, NO fingerprints.
-        - **PERSPECTIVE:** Perfectly flat 90-degree front-facing view.
+        - **VIBE:** High-Fidelity DIRECT DIGITAL EXPORT (Native App UI).
+        - **PERSPECTIVE:** 100% Perfectly Flat 90-degree front-facing view. 
+        - **CRITICAL:** DO NOT show a physical phone, DO NOT show a hand holding a phone, DO NOT show a table or background. 
+        - **REALISM:** This must look like a high-resolution PNG screenshot. The text must be sharp, anti-aliased, and pixel-perfect.
+        - **DETAILS:** Use authentic app interface elements (status bars, icons) where appropriate for the format.
         `;
     } else {
         return `
@@ -57,22 +57,15 @@ export const generateAIWrittenPrompt = async (ctx: PromptContext): Promise<strin
 
     // SYSTEM PROMPT UPGRADED FOR "THINKING MODE" COMPATIBILITY
     const systemPrompt = `
-    ROLE: Cinematic Visual Storyteller & Advertising Director.
+    ROLE: High-End Digital UI Designer & Cinematic Director.
     
     TASK: Write a rich, narrative-driven image generation prompt optimized for Gemini 3 Pro (Nano Banana Pro).
     
-    **CORE PHILOSOPHY: NARRATIVE OVER TEMPLATES.**
-    Do NOT use rigid lists like "Subject: Cat, Lighting: Good".
-    Instead, write a fluid paragraph that describes the scene, the movement, and the technical photography details as a cohesive story.
-    
     **REQUIRED PROMPT ELEMENTS (The "Thinking" Framework):**
-    1. **CINEMATOGRAPHY:** Specify the Lens (e.g., "85mm macro", "35mm wide"), Camera (e.g., "Leica M6", "iPhone 15 Pro"), and Angle.
-    2. **NARRATIVE ACTION:** Describe the moment being captured. "A runner breathing heavily at the peak of a mountain..."
-    3. **LIGHTING & ATMOSPHERE:** Use emotive words. "Dappled sunlight filtering through leaves," "Harsh neon buzz," "Soft window diffusion."
-    4. **INTENT & FOCUS:** Explain *why* the shot looks this way. "To highlight the condensation on the can..."
-    
-    **EXAMPLE (Aim for this style):**
-    "A photorealistic shot taken with an 85mm macro lens. Sharp focus on the dew drops on the surface of a soda can, while the beach party background behind is rendered in soft, creamy bokeh to create an energetic summer atmosphere while keeping the attention strictly on the product's freshness."
+    1. **CINEMATOGRAPHY:** Specify the View (e.g., "Direct flat top-down digital view" for UI, or "85mm shallow depth" for photo).
+    2. **NARRATIVE ACTION:** Describe the content. 
+    3. **LIGHTING & ATMOSPHERE:** Emotive descriptions.
+    4. **INTENT & FOCUS:** Why it looks this way.
     
     **CONTEXT:**
     - Product/Niche: ${niche}
@@ -94,14 +87,19 @@ export const generateAIWrittenPrompt = async (ctx: PromptContext): Promise<strin
     
     try {
         const response = await generateWithRetry({
-            model: "gemini-2.0-flash-exp", 
+            model: "gemini-3-flash-preview", 
             contents: [{ role: "user", parts: [{ text: systemPrompt }] }],
             generationConfig: {
-                temperature: 0.9, // Higher temperature for more creative/descriptive variance
+                temperature: 0.9,
             }
         });
         
-        let prompt = response.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
+        let prompt = response.text?.trim() || "";
+        
+        // Failsafe for digital formats to ensure they aren't turned into physical mockups
+        if (isDigitalFormat(format)) {
+            prompt = `A direct, perfectly flat 2D digital UI screenshot. ${prompt}. No physical objects, no hands, no reflections. Sharp vector-like text rendering.`;
+        }
         
         // Failsafe for embedded text
         if (embeddedText && !prompt.includes(embeddedText)) {
@@ -112,6 +110,6 @@ export const generateAIWrittenPrompt = async (ctx: PromptContext): Promise<strin
 
     } catch (e) {
         console.error("Prompt Gen Error:", e);
-        return `A cinematic shot of ${visualScene}, captured in a ${format} style. Lighting is dramatic. Context: ${niche}.`; 
+        return `A perfectly flat digital 2D interface for ${format}, displaying the copy for ${visualScene}. Crisp typography, direct view.`; 
     }
 };
