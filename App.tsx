@@ -13,7 +13,7 @@ import {
   NodeData, Edge, NodeType, ViewMode, ProjectContext, 
   CreativeFormat, CampaignStage, MarketAwareness, 
   LanguageRegister, FunnelStage, CopyFramework, TestingTier,
-  StoryOption, BigIdeaOption, MechanismOption, HVCOOption, StrategyMode, MassDesireOption 
+  StoryOption, BigIdeaOption, MechanismOption, HVCOOption, StrategyMode, MassDesireOption, AdIdentity 
 } from './types';
 
 import * as GeminiService from './services/geminiService';
@@ -528,7 +528,7 @@ const App: React.FC = () => {
       }
   };
 
-  const handleGenerateCreatives = async () => {
+  const handleGenerateCreatives = async (manualIdentity: AdIdentity | null) => {
       if (!pendingFormatParentId) return;
       const parentNode = nodes.find(n => n.id === pendingFormatParentId);
       if (!parentNode) return;
@@ -558,7 +558,7 @@ const App: React.FC = () => {
           const isHVCO = parentNode.type === NodeType.HVCO_NODE;
 
           const strategyRes = await GeminiService.generateCreativeStrategy(
-              project, fullStrategyContext, angleToUse, fmt, isHVCO
+              project, fullStrategyContext, angleToUse, fmt, isHVCO, manualIdentity
           );
           
           if (strategyRes.data) {
@@ -620,7 +620,8 @@ const App: React.FC = () => {
                            copyAngle: strategy.headline,
                            rationale: strategy.rationale,
                            congruenceRationale: strategy.congruenceRationale,
-                           uglyAdStructure: strategy.uglyAdStructure
+                           uglyAdStructure: strategy.uglyAdStructure,
+                           voiceAnchor: strategy.voiceAnchor
                        }, 
                        finalGenerationPrompt 
                    },

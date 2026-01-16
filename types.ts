@@ -78,6 +78,14 @@ export enum CreativeFormat {
   CHECKLIST_TODO = 'Checklist'
 }
 
+export enum AdIdentity {
+    SKEPTIC = 'The Skeptic Convert', // "I didn't believe it until..."
+    AUTHORITY = 'The Authority',     // "As a specialist, here is why..."
+    INFLUENCER = 'The Gatekeeper',   // "Don't walk, RUN."
+    DIARIST = 'The Vulnerable User', // "I'm shaking writing this..."
+    OBSERVER = 'The Case Study'      // "Look at what happened to Sarah..."
+}
+
 export enum CampaignStage {
   TESTING = 'TESTING', 
   SCALING = 'SCALING' 
@@ -306,6 +314,7 @@ export interface CreativeStrategyResult {
   rationale: string;
   congruenceRationale: string;
   uglyAdStructure?: UglyAdStructure; // NEW: The 4-part Formula
+  voiceAnchor?: string; // NEW: The selected Identity (e.g. "The Authority")
 }
 
 export interface GenResult<T> {

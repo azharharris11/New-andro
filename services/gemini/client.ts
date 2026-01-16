@@ -55,32 +55,34 @@ export function extractJSON<T>(text: string): T {
  * Wraps ai.models.generateContent with exponential backoff retry logic.
  * Helps prevent "Unexpected end of JSON input" and 503 errors.
  */
-export async function generateWithRetry(params: any, retries = 4, delay = 2000): Promise<GenerateContentResponse> {
+export async function generateWithRetry(params: any, retries = 3, delay = 1000): Promise<GenerateContentResponse> {
   let lastError;
   for (let i = 0; i < retries; i++) {
     try {
+      // Create a fresh request each time to avoid "Response body object should not be disturbed" errors
       const response = await ai.models.generateContent(params);
       
-      if (!response.text && (!response.candidates || response.candidates.length === 0)) {
+      // Basic check if response has content
+      if (!response.text && !response.candidates) {
           throw new Error("Empty response from Gemini");
       }
       
       return response;
     } catch (error: any) {
       lastError = error;
-      const errorMsg = error.message || "";
-      const isRateLimit = error.status === 429 || error.code === 429 || errorMsg.includes("429");
-      const isServerOverload = error.status === 503 || error.code === 503 || errorMsg.includes("503") || errorMsg.includes("overloaded");
+      const isNetworkError = error.message?.includes('fetch') || error.message?.includes('Response');
+      const isRateLimit = error.status === 429 || error.code === 429;
+      const isServerOverload = error.status === 503 || error.code === 503;
 
       if (i === retries - 1) break;
 
-      if (isRateLimit || isServerOverload) {
-         console.warn(`API call failed (attempt ${i + 1}/${retries}) due to overload. Retrying in ${delay * Math.pow(2, i)}ms...`, error.message);
+      if (isNetworkError || isRateLimit || isServerOverload) {
+         console.warn(`API call failed (attempt ${i + 1}/${retries}). Retrying...`, error.message);
          await new Promise(resolve => setTimeout(resolve, delay * Math.pow(2, i)));
          continue;
       }
       
-      throw error; 
+      throw error; // Throw immediately for other errors (like 400 Bad Request)
     }
   }
   throw lastError;

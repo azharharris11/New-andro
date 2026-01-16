@@ -11,90 +11,82 @@ import {
   LanguageRegister, 
   StrategyMode,
   MarketAwareness,
-  UglyAdStructure
+  UglyAdStructure,
+  AdIdentity
 } from "../../types";
 import { ai, extractJSON, generateWithRetry } from "./client";
 import { getFormatTextGuide } from "./imageText"; 
 
-export const generateSalesLetter = async (
-  project: ProjectContext,
-  story: StoryOption,
-  bigIdea: BigIdeaOption,
-  mechanism: MechanismOption,
-  hook: string,
-  coliseumKeywords: string[] = [] 
-): Promise<GenResult<string>> => {
-  const model = "gemini-3-flash-preview";
-  const country = project.targetCountry || "Indonesia";
-  const awareness = project.marketAwareness || MarketAwareness.PROBLEM_AWARE;
-  
-  let keywordInstruction = "";
-  if (coliseumKeywords && coliseumKeywords.length > 0) {
-      keywordInstruction = `
-      **CRITICAL VOCABULARY RULE (THE TRIBE LANGUAGE):**
-      You MUST use the following insider slang/keywords naturally within the story:
-      [${coliseumKeywords.join(", ")}].
-      DO NOT TRANSLATE THESE. Use them raw.
-      `;
-  }
+const getPOVIdentity = (format: CreativeFormat): string => {
+    // This is the fallback default, but the AI will now override this with specific archetypes
+    return "ADAPTIVE";
+};
 
-  let structureInstruction = "";
-  if (awareness === MarketAwareness.UNAWARE) {
-      structureInstruction = `
-      **FRAMEWORK: 8-STEP INDIRECT STORY LEAD (Andromeda Standard for UNAWARE)**
-      1. ** The Hook (Behavior/Emotion):** Start with a specific behavior or feeling. NO PRODUCT MENTION.
-      2. ** Instant Identity:** Call out who this is for indirectly.
-      3. ** Amplify Emotion:** Twist the knife.
-      4. ** The Real Problem (UMP):** Reveal the *real* enemy.
-      5. ** The New Mechanism (UMS):** Introduce the new concept/shift.
-      6. ** The Discovery:** The "Epiphany" moment.
-      7. ** The Transformation:** What life looks like now.
-      8. ** The Offer/CTA:** ONLY NOW introduce ${project.productName}.
-      TONE: Confessional, vulnerable.
-      `;
-  } else if (awareness === MarketAwareness.PROBLEM_AWARE) {
-      structureInstruction = `
-      **FRAMEWORK: PAS (Problem - Agitate - Solution)**
-      1. Call out the Pain/Symptom immediately.
-      2. Agitate: "It gets worse if ignored..."
-      3. Introduce the Mechanism (Why it happens).
-      4. Introduce the Solution (${project.productName}).
-      5. Social Proof & Offer.
-      `;
-  } else {
-      structureInstruction = `
-      **FRAMEWORK: DIRECT RESPONSE OFFER (Mafia Style)**
-      1. BOLD PROMISE: What result in what timeframe?
-      2. THE MECHANISM: Why it works.
-      3. VALUE STACK: Everything they get.
-      4. RISK REVERSAL: The "Insane" Guarantee.
-      5. SCARCITY: Why buy now?
-      `;
-  }
+// --- HELPER: LANGUAGE INSTRUCTION ---
+const getLanguageInstruction = (country: string, register: LanguageRegister): string => {
+    const isIndo = country?.toLowerCase().includes("indonesia");
+    if (!isIndo) return `LANGUAGE: Native language of ${country}.`;
 
-  const prompt = `
-    ROLE: Direct Response Copywriter (Long Form / Advertorial Specialist).
-    TARGET COUNTRY: ${country}. 
-    TASK: Write a high-converting Sales Letter (long-form Facebook Ad) in the NATIVE language of ${country}.
-    ${structureInstruction}
-    STRATEGY STACK:
-    1. HOOK: "${hook}"
-    2. STORY: "${story.narrative}"
-    3. THE SHIFT: "${bigIdea.headline}"
-    4. THE SOLUTION: "${mechanism.scientificPseudo}"
-    5. OFFER: ${project.offer} for ${project.productName}.
-    PRODUCT DETAILS: ${project.productDescription}
-    ${keywordInstruction}
-    FORMAT: Markdown. Short paragraphs.
-  `;
+    if (register === LanguageRegister.SLANG) {
+        return `LANGUAGE: Bahasa Indonesia (Gaya santai/Gaul). Gunakan 'Gue/Lo'.`;
+    } else if (register === LanguageRegister.PROFESSIONAL) {
+        return `LANGUAGE: Bahasa Indonesia (Formal). Gunakan 'Anda/Saya'.`;
+    } else {
+        return `LANGUAGE: Bahasa Indonesia (Casual). Gunakan 'Aku/Kamu'.`;
+    }
+};
 
-  const response = await generateWithRetry({ model, contents: prompt });
+// --- HELPER: BUILD STRATEGIC BRIEF ---
+const buildStrategicBrief = (context: any): string => {
+    let brief = "**STRATEGIC FOUNDATION (LOCKED - DO NOT CHANGE):**\n";
+    
+    // 0. MASS DESIRE (The Deepest Root - Always Present)
+    if (context.massDesireData) {
+        brief += `
+        - PSYCHOLOGICAL ANCHOR (MASS DESIRE):
+        - CORE DESIRE: "${context.massDesireData.headline}"
+        - LIFE FORCE 8 TYPE: ${context.massDesireData.type}
+        - MARKET SYMPTOM: "${context.massDesireData.marketSymptom}" (This is exactly what keeps them awake at night).
+        `;
+    }
 
-  return {
-    data: response.text || "",
-    inputTokens: response.usageMetadata?.promptTokenCount || 0,
-    outputTokens: response.usageMetadata?.candidatesTokenCount || 0
-  };
+    // 1. MECHANISM (Logic Path)
+    if (context.mechanismData) {
+        brief += `
+        - CORE PILLAR: LOGIC / MECHANISM
+        - UNIQUE MECHANISM: "${context.mechanismData.scientificPseudo}"
+        - HOW IT WORKS: ${context.mechanismData.ums}
+        - VISUAL FOCUS: Show the mechanism in action. Validate the logic.
+        `;
+    } 
+    // 2. STORY (Emotion Path)
+    else if (context.storyData) {
+        brief += `
+        - CORE PILLAR: EMOTION / STORY
+        - NARRATIVE ARC: "${context.storyData.narrative}"
+        - EMOTIONAL THEME: ${context.storyData.emotionalTheme}
+        - VISUAL FOCUS: Dramatize this specific moment. Show the emotion.
+        `;
+    }
+    // 3. BIG IDEA (Concept Path)
+    else if (context.bigIdeaData) {
+        brief += `
+        - CORE PILLAR: CONCEPT / BIG IDEA
+        - CONCEPT: "${context.bigIdeaData.concept}"
+        - SHIFT: Moving from ${context.bigIdeaData.targetBelief} to New Opportunity.
+        - VISUAL FOCUS: A metaphor or scene that represents this shift.
+        `;
+    }
+
+    // 4. PERSONA (Always present)
+    if (context.meta) {
+        brief += `
+        - TARGET WHO: ${context.meta.name}
+        - VISCERAL PAIN: "${context.meta.visceralSymptoms?.[0] || 'General Pain'}"
+        `;
+    }
+
+    return brief;
 };
 
 export const generateCreativeStrategy = async (
@@ -102,148 +94,166 @@ export const generateCreativeStrategy = async (
   fullStrategyContext: any, 
   angle: string, 
   format: CreativeFormat,
-  isHVCOFlow: boolean = false
+  isHVCOFlow: boolean = false,
+  manualIdentity: AdIdentity | null = null // NEW: Accept manual identity override
 ): Promise<GenResult<CreativeStrategyResult>> => {
   const model = "gemini-3-flash-preview";
-  const country = project.targetCountry || "Indonesia";
-  const register = project.languageRegister || LanguageRegister.CASUAL;
+  // SAFEGUARD: ensure angle is a string
+  const safeAngle = angle || "";
+  const cleanAngle = safeAngle.replace(/^(Hook|Headline|Angle|Angle \d)\s*[:#-]\s*/i, "").replace(/["']/g, "").trim();
+  const langInstruction = getLanguageInstruction(project.targetCountry || "USA", project.languageRegister || LanguageRegister.CASUAL);
   
-  const persona = fullStrategyContext || {};
-  const personaPain = persona.visceralSymptoms ? persona.visceralSymptoms.join(", ") : "General frustration";
-  const mech = fullStrategyContext?.mechanismData;
-  const bigIdea = fullStrategyContext?.bigIdeaData;
-  const story = fullStrategyContext?.storyData;
-  const massDesire = fullStrategyContext?.massDesireData; 
+  // Classify Format Type for Text Injection
+  const isLongFormFormat = [CreativeFormat.IG_STORY_TEXT, CreativeFormat.LONG_TEXT].includes(format);
+  const isTextLedFormat = [
+    CreativeFormat.IG_STORY_TEXT, CreativeFormat.LONG_TEXT,
+    CreativeFormat.TWITTER_REPOST, CreativeFormat.HANDHELD_TWEET,
+    CreativeFormat.REDDIT_THREAD, CreativeFormat.PHONE_NOTES,
+    CreativeFormat.GMAIL_UX, CreativeFormat.DM_NOTIFICATION,
+    CreativeFormat.REMINDER_NOTIF, CreativeFormat.CHAT_CONVERSATION,
+    CreativeFormat.SOCIAL_COMMENT_STACK
+  ].includes(format);
+
+  // --- 1. COPYWRITING LOCK ---
+  const lockedHeadline = fullStrategyContext?.meta?.headline || fullStrategyContext?.headline || "";
+  const lockedHook = fullStrategyContext?.meta?.hook || fullStrategyContext?.hook || cleanAngle;
   
-  const coliseumKeywords = persona.meta?.coliseumKeywords || persona.coliseumKeywords || [];
+  const copyDirective = lockedHeadline 
+    ? `**COPYWRITING INSTRUCTION (STRICT):**
+       - APPROVED VISUAL HEADLINE (For Image Overlay): "${lockedHeadline}"
+       - APPROVED CAPTION HOOK (For Caption First Line): "${lockedHook}"
+       - TASK: Execute this split strategy.`
+    : `ANGLE: "${cleanAngle}"`;
+
+  // --- 2. STRATEGY LOCK ---
+  const strategicBrief = buildStrategicBrief(fullStrategyContext);
+
+  // --- 3. VOC LOCK ---
+  const coliseumKeywords = fullStrategyContext?.meta?.coliseumKeywords || fullStrategyContext?.coliseumKeywords || [];
   let keywordInstruction = "";
   if (coliseumKeywords.length > 0) {
       keywordInstruction = `
-      **MANDATORY VOCABULARY:** Use these keywords: [${coliseumKeywords.join(", ")}].
+      **MANDATORY VOCABULARY (THE TRIBE LANGUAGE):**
+      You MUST use these specific insider keywords in the 'primaryText' or 'embeddedText' if natural:
+      [${coliseumKeywords.join(", ")}].
       `;
   }
-const strategyInstruction = `
-    **MANDATORY NATIVE RULE (Nano Banana Pro):**
-    
-    IF the Format is a UI format (Instagram Story, Twitter, Chat, Notes, etc):
-    - **VISUAL SCENE INSTRUCTION:** Describe a CLOSE-UP SCREENSHOT or a PHONE SCREEN.
-    - The 'embeddedText' must be short and natively integrated.
-
-    **IDENTITY & PERSPECTIVE RULE (THE "WHO IS SPEAKING?" PROTOCOL):**
-    You are the GUIDE (The Solution), not the VICTIM (The Problem). Follow these strict role assignments:
-
-    1. **TWO-WAY CONVERSATION FORMATS (Chat, DM, WhatsApp):**
-       - **LEFT BUBBLE (Grey/White):** The CLIENT/VICTIM complaining about the pain.
-       - **RIGHT BUBBLE (Blue/Green):** YOU (The Brand) validating, empathizing, or solving.
-       - *CRITICAL:* Never put the complaint in the Right bubble.
-
-    2. **ONE-WAY NOTIFICATION FORMATS (Gmail, Lockscreen, Reminder):**
-       - **SENDER NAME:** Must be the "Source of Pain" (e.g., "Ex-Boyfriend", "Bill Collector") OR a "Neutral Reminder".
-       - **MESSAGE BODY:** The pain/trigger itself.
-       - *CRITICAL:* Do not use the Brand Name as the sender of a desperate/sad message.
-
-    3. **PUBLIC POST FORMATS (Twitter, Reddit, Threads):**
-       - **IF CONTENT IS SAD/COMPLAINING:** The Handle/Username MUST be "Anonymous" (e.g., "SadGirl2024", "u/Throwaway"), representing a user.
-       - **IF CONTENT IS EDUCATIONAL/TIPS:** The Handle/Username CAN be the Brand.
-
-    4. **STORYTELLING FORMATS (IG Story, Notes, Text Overlay):**
-       - **"OBSERVER MODE":** Use "Why do so many people feel..." (Validating the audience).
-       - **"PAST SELF":** Use "I used to feel..." (Showing transformation).
-       - **"CLIENT QUOTE":** Use "A client told me..." (Social Proof).
-       - *FORBIDDEN:* "I am lonely/broke/sad" (Present tense complaint from the Brand).
-
-    5. **INTERACTIVE FORMATS (Poll, Q&A):**
-       - **POLL QUESTION:** Ask the AUDIENCE about THEIR pain ("Do YOU feel this?").
-       - **Q&A BOX:** The Question Box is the CLIENT asking/venting. The Text below is YOU answering.
-
-    6. **UGC/CREATOR FORMATS (Mirror Selfie, Rant, TikTok):**
-       - **IF VISUAL IS A CREATOR/CUSTOMER:** The text is a TESTIMONIAL ("Finally found this...").
-       - **IF VISUAL IS THE EXPERT (You):** The text is EDUCATION ("Stop doing this...").
-
-    7. **MEME FORMATS:**
-       - "Me when..." refers to the AUDIENCE'S experience (Relatability), not the Brand's experience.
-
-    **SUMMARY:**
-    - Pain/Problem = Comes from the Client/Audience/Past.
-    - Solution/Empathy = Comes from the Brand/Future.
-  `;
-  const formatInstruction = getFormatTextGuide(format);
+  
+  // --- 4. IDENTITY INSTRUCTION ---
+  let identityInstruction = "";
+  if (manualIdentity) {
+      identityInstruction = `
+      **MANDATORY VOICE ANCHOR:**
+      You MUST adopt the persona of: "${manualIdentity}" throughout this creative.
+      - **DO NOT** deviate from this character.
+      - IF 'The Authority': Be strict, factual, and professional.
+      - IF 'The Skeptic': Be cynical, use "I didn't believe it", and "honestly".
+      - IF 'The Vulnerable Diarist': Be emotional, use "I'm shaking", "Deep secret".
+      `;
+  } else {
+      identityInstruction = `
+      **STEP 1: SELECT A VOICE ARCHETYPE (CRITICAL)**
+      Instead of a generic user, pick the specific 'Character' who is speaking.
+      Choose ONE that fits the Angle best:
+      1. **THE SKEPTIC CONVERT:** "I didn't believe the hype, but..." (High Relatability).
+      2. **THE AUTHORITY:** "As a specialist/founder, here is why X fails." (High Trust).
+      3. **THE GATEKEEPER:** "Don't walk, RUN. I found the cheat code." (High Curiosity/Influencer).
+      4. **THE OBSERVER (Case Study):** "Look at what happened to [Name] in 30 days." (Social Proof).
+      5. **THE VULNERABLE DIARIST:** "I'm shaking writing this... I finally found it." (Deep Emotion).
+      `;
+  }
 
   const prompt = `
-    # ROLE: Native Advertising Expert
-    TASK: Design a Creative Asset that is "Invisible" (Native Ad).
+    # ROLE: Creative Director (Execution Phase)
+    TASK: Visual Strategy for ${format}.
     
-    CONTEXT:
-    Format: ${format}
-    Target: ${country}
-    Product: ${project.productName}
-    Hook: "${angle}"
+    ${langInstruction}
     
-    PERSONA DATA:
-    Who: ${persona.name}
-    Pain: ${personaPain}
-    ${massDesire ? `Desire: "${massDesire.headline}"` : ''} 
+    ${strategicBrief}
+    
+    ${copyDirective}
     
     ${keywordInstruction}
-    ${strategyInstruction}
-    ${formatInstruction}
     
-    **TASK:** 
-    Design the COMPLETE Creative Asset.
+    ${identityInstruction}
+
+    **INSTRUCTIONS FOR 'visualScene':**
+    - The scene MUST match the chosen Voice Archetype.
+    - If AUTHORITY: Show a clean office, lab coat, or professional setting.
+    - If SKEPTIC/DIARIST: Show a messy bedroom, car interior, or dimly lit room (authentic).
+    - If GATEKEEPER: Show a bright aesthetic space or outdoor walk.
+    - **NO AD COPY:** Do NOT describe text on the background. Only physical objects.
     
+    **INSTRUCTIONS FOR 'embeddedText' (Image Overlay):**
+    ${isLongFormFormat 
+      ? `CRITICAL: This format is a "Wall of Text". Write a 40-60 word paragraph adopting the CHOSEN VOICE ARCHETYPE. 
+         - If Authority: Use data, logic, and "I" statements.
+         - If Skeptic: Admit your past doubts.
+         - If Case Study: Describe someone else's transformation.
+         - WRITE IN TARGET LANGUAGE.`
+      : isTextLedFormat
+        ? `This is a Text-First format. Write the content based on the APPROVED CAPTION HOOK ("${lockedHook}") using the CHOSEN VOICE ARCHETYPE. WRITE IN TARGET LANGUAGE.`
+        : `This is a Visual-First format. The text overlay MUST be the APPROVED VISUAL HEADLINE ("${lockedHeadline}"). WRITE IN TARGET LANGUAGE.`
+    }
+
+    **INSTRUCTIONS FOR 'primaryText' (Ad Caption):**
+    - This is the text BELOW/ABOVE the image (the post caption).
+    - MUST start with 'APPROVED CAPTION HOOK' ("${lockedHook}").
+    - Continue the copy naturally based on the 'STRATEGIC FOUNDATION' (Mass Desire + Story/Mechanism).
+    - WRITE IN TARGET LANGUAGE.
+
     **OUTPUT JSON:**
-    - visualScene: Specific RAW action/setup for the image generator. Focus on the "Real" aspect.
-    - visualStyle: Camera type, lighting , mood.
-    - embeddedText: The exact text string to render on the image (Native Language).
-    - primaryText: Ad caption (Native Language).
-    - headline: Ad headline Native Language.
-    - cta: Button text.
-    - rationale: Why this hooks the persona.
-    - congruenceRationale: How the image visually proves the text claim.
-    - uglyAdStructure: { keyword, emotion, qualifier, outcome } (MANDATORY).
+    - visualScene: (Rich description of background/people/props/lighting)
+    - visualStyle: (Photography style)
+    - embeddedText: (The overlay text)
+    - primaryText: (Ad caption - Must support the Approved Headline)
+    - headline: (Meta Ads Headline - MUST be based on Approved Headline)
+    - cta: (Button text)
+    - rationale: (Why this works)
+    - voiceAnchor: (Which archetype did you choose? e.g. "The Authority", "The Skeptic")
+    - uglyAdStructure: { keyword, emotion, qualifier, outcome }
   `;
 
-  try {
-    const response = await generateWithRetry({
-      model,
-      contents: prompt,
-      config: {
-        temperature: 1.0,
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            visualScene: { type: Type.STRING },
-            visualStyle: { type: Type.STRING },
-            embeddedText: { type: Type.STRING },
-            primaryText: { type: Type.STRING },
-            headline: { type: Type.STRING },
-            cta: { type: Type.STRING },
-            rationale: { type: Type.STRING },
-            congruenceRationale: { type: Type.STRING },
-            uglyAdStructure: {
-                type: Type.OBJECT,
-                properties: {
-                    keyword: { type: Type.STRING },
-                    emotion: { type: Type.STRING },
-                    qualifier: { type: Type.STRING },
-                    outcome: { type: Type.STRING }
-                },
-                required: ["keyword", "emotion", "qualifier", "outcome"]
+  const response = await generateWithRetry({
+    model,
+    contents: prompt,
+    config: {
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: Type.OBJECT,
+        properties: {
+          visualScene: { type: Type.STRING },
+          visualStyle: { type: Type.STRING },
+          embeddedText: { type: Type.STRING },
+          primaryText: { type: Type.STRING },
+          headline: { type: Type.STRING },
+          cta: { type: Type.STRING },
+          rationale: { type: Type.STRING },
+          voiceAnchor: { type: Type.STRING },
+          uglyAdStructure: {
+            type: Type.OBJECT,
+            properties: {
+              keyword: { type: Type.STRING },
+              emotion: { type: Type.STRING },
+              qualifier: { type: Type.STRING },
+              outcome: { type: Type.STRING }
             }
-          },
-          required: ["visualScene", "visualStyle", "embeddedText", "primaryText", "headline", "cta", "rationale", "uglyAdStructure"]
+          }
         }
       }
-    });
+    }
+  });
 
-    return {
-      data: extractJSON(response.text || "{}"),
-      inputTokens: response.usageMetadata?.promptTokenCount || 0,
-      outputTokens: response.usageMetadata?.candidatesTokenCount || 0
-    };
-  } catch (error) {
-    console.error("Creative Strategy Generation Error", error);
-    throw error;
-  }
+  return {
+    data: extractJSON(response.text || "{}"),
+    inputTokens: response.usageMetadata?.promptTokenCount || 0,
+    outputTokens: response.usageMetadata?.candidatesTokenCount || 0
+  };
+};
+
+export const generateSalesLetter = async (p: ProjectContext, s: StoryOption, b: BigIdeaOption, m: MechanismOption, h: string, k: string[] = []): Promise<GenResult<string>> => {
+  const model = "gemini-3-flash-preview";
+  const prompt = `Write Gary Halbert style ad starting with: "${h}". Story: "${s.narrative}". Mechanism: "${m.scientificPseudo}". Keywords: ${k.join(", ")}.`;
+  const response = await generateWithRetry({ model, contents: prompt });
+  return { data: response.text || "", inputTokens: response.usageMetadata?.promptTokenCount || 0, outputTokens: response.usageMetadata?.candidatesTokenCount || 0 };
 };
