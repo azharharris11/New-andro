@@ -17,7 +17,7 @@ export const getFormatTextGuide = (format: CreativeFormat): string => {
         case CreativeFormat.LONG_TEXT:
             return `${baseGuide}
             STYLE: Instagram Story "Wall of Text" Overlay.
-            COPY STYLE: Long-form narrative (3-4 Sentences). jangan lupa call to action
+            COPY STYLE: Long-form narrative (3-4 short  Sentences). jangan lupa call to action
             FONT: San Francisco (iOS) or Typewriter font dengan background text agar tulisan bisa terbaca Small/Medium size. with smart highlight (seperti stabilo) meng highligh tulisan hooknya yg membuat orang mau membaca sampai akhir 
             LAYOUT: Center-aligned or Left-aligned block text.
             BACKGROUND: sesuaikan photo background , 

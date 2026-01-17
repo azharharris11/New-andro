@@ -224,7 +224,7 @@ export const generateCreativeStrategy = async (
         properties: {
           visualScene: { type: Type.STRING },
           visualStyle: { type: Type.STRING },
-          embeddedText: { type: Type.STRING },
+          
           primaryText: { type: Type.STRING },
           headline: { type: Type.STRING },
           cta: { type: Type.STRING },

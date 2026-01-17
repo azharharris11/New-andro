@@ -92,8 +92,7 @@ export const generateCreativeImage = async (
       congruenceRationale,
       aspectRatio,
       rawPersona: persona,
-      embeddedText,
-      // Pass reference flag to prompt generator
+            // Pass reference flag to prompt generator
       hasReferenceImage: !!(referenceImageBase64 || project.productReferenceImage)
   };
 
