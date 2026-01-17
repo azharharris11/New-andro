@@ -4,7 +4,7 @@ import { generateWithRetry, extractJSON } from "./client";
 import { 
     PromptContext, 
     ENHANCERS, 
-    getSafetyGuidelines, 
+
     getCulturePrompt, 
     getPersonaVisualContext, 
     parseAngle, 
@@ -72,7 +72,7 @@ export const generateCreativeImage = async (
   if (isUglyFormat) appliedEnhancer = ENHANCERS.NANO_BANANA_RAW; 
   else if (isNativeStory || format === CreativeFormat.CAROUSEL_REAL_STORY) appliedEnhancer = ENHANCERS.UGC;
 
-  const safety = getSafetyGuidelines(isUglyFormat);
+
   
   const fullStoryContext = {
       story: persona.storyData,

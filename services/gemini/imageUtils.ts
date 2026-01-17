@@ -30,36 +30,27 @@ export interface PromptContext {
     hasReferenceImage?: boolean; // Added type definition
 }
 
-export const getSafetyGuidelines = (isUglyOrMeme: boolean): string => {
-  const COMMON_RULES = `
-    1. Humans must look realistic unless specified as cartoon.
-  `;
-
-  return `
-    ${COMMON_RULES}
-    5. NO realistic "before/after" split screens that violate platform policies.
-  `;
-};
 
 /**
  * ENHANCERS: Updated for "Authentic Native" (Nano Banana Pro v2).
  * Goal: Look like a high-quality organic post, not a low-quality trashy image.
- */
-export const ENHANCERS = {
-    PROFESSIONAL: "High-end commercial photography, 8k, shot on Phase One, studio lighting, clean composition.",
+ */export const ENHANCERS = {
+    // Dulu: "High-end commercial photography..." -> SEKARANG: Corporate Candid
+    PROFESSIONAL: "Shot on DSLR, neutral lighting, f/5.6 aperture (everything in focus), minimal editing, corporate documentary style, authentic skin texture.",
     
-    UGC: "Shot on iPhone 15, authentic creator vibe, natural home lighting, realistic skin textures, no filters, slightly imperfect framing.",
+    // Dulu: "Shot on iPhone 15..." -> SEKARANG: Raw Phone Photo
+    UGC: "Phone photography (iPhone 11 quality), unedited JPEG, messy real-life background, flat lighting, 'point-and-shoot' aesthetic.",
     
+    // Dulu: "Authentic Social..." -> SEKARANG: Low-Fi / Amateur
     NANO_BANANA_RAW: `
-        STYLE: "AUTHENTIC SOCIAL" REALISM.
-        CAMERA: Modern Smartphone (iPhone 15 Pro or Google Pixel), sharp focus, high resolution.
-        LIGHTING: Soft natural morning light, diffused window light. AVOID harsh flash.
-        ENVIRONMENT: Real home setting (lived-in, authentic textures), but NOT filthy/garbage.
-        VIBE: Viral organic post, "Aesthetically Real", candid, user-generated content.
-        NO: perfect symmetry, 3D render look, blurriness, pixelation, overly dark shadows.
+        STYLE: AMATEUR SNAPSHOT.
+        CAMERA: Low-budget smartphone camera.
+        LIGHTING: Overhead fluorescent light or direct harsh flash. NO "Golden Hour". NO "Cinematic Lighting".
+        QUALITY:  flat colors (low saturation), 
+        VIBE: "I just took this picture in my room", authentic, cringe, raw reality.
+        NEGATIVE PROMPT: 3d render, illustration, painting, octane render, studio lighting, bokeh, professional color grading, hdr, vibrant.
     `
 };
-
 /**
  * SOULMATE VISUAL INJECTION
  * Translates abstract Persona attributes into specific PHYSICAL flaws and environmental clutter.
@@ -84,41 +75,6 @@ export const getPersonaVisualContext = (persona: any): string => {
     `;
 };
 
-/**
- * PSYCHOLOGY TO CINEMATOGRAPHY MAP
- * Translates Mass Desire into Camera Angles & Lighting.
- */
-export const getDesireVisualCues = (desireType: string): string => {
-    switch (desireType) {
-        case HumanDesire.SUPERIORITY:
-        case "Status":
-            return "CAMERA: Low Angle (Heroic/Dominant). LIGHTING: High contrast, spotlight on subject. COMPOSITION: Subject in center, looking down at lens or looking away confidently.";
-        case HumanDesire.PAIN_FREEDOM:
-        case "Pain":
-            return "CAMERA: High Angle (Vulnerable/Small) or Extreme Close Up (Intense). LIGHTING: Dim, moody, shadows hiding parts of the room. COMPOSITION: Claustrophobic or isolated.";
-        case HumanDesire.COMFORT:
-        case "Comfort":
-            return "CAMERA: Eye Level (Relatable). LIGHTING: Warm, soft, Golden Hour or Window Light. COMPOSITION: Open, cozy, soft textures prominent.";
-        case HumanDesire.SEXUAL:
-            return "CAMERA: Close up on features. LIGHTING: Warm, red/orange hues, soft focus. COMPOSITION: Intimate depth of field.";
-        default:
-            return "CAMERA: Dutch Angle (Slight tilt) for dynamic energy. LIGHTING: Natural/Bright.";
-    }
-};
-
-/**
- * PROMPT STRUCTURE ROULETTE (CHAOS MODE)
- * Prevents "Same-y" generations by forcing the LLM to start sentences differently.
- */
-export const getChaosStructure = (): string => {
-    const structures = [
-        "STRUCTURE A (Action First): Start by describing the ACTION happening, then reveal the subject.",
-        "STRUCTURE B (Atmosphere First): Start by describing the LIGHTING and MOOD, then the environment, then the subject.",
-        "STRUCTURE C (Technical First): Start by describing the CAMERA LENS and ANGLE, then what it is capturing.",
-        "STRUCTURE D (Detail First): Start with an extreme close-up detail (a hand, an object, a texture) and zoom out to the scene."
-    ];
-    return structures[Math.floor(Math.random() * structures.length)];
-};
 
 export const parseAngle = (angle: string): ParsedAngle => {
     const cleanAngle = angle.trim().replace(/^"|"$/g, '');
