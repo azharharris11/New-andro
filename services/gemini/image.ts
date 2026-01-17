@@ -87,7 +87,6 @@ export const generateCreativeImage = async (
       personaVisuals, moodPrompt, culturePrompt, 
       subjectFocus,
       enhancer: appliedEnhancer,
-      safety,
       fullStoryContext,
       congruenceRationale,
       aspectRatio,

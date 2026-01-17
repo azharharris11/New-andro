@@ -20,7 +20,7 @@ export interface PromptContext {
     moodPrompt: string;
     culturePrompt: string;
     enhancer: string;
-    safety?: string;
+
     rawPersona?: any;
     embeddedText?: string;
     aspectRatio?: string;
